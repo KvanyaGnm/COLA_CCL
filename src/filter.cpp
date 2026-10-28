@@ -10,20 +10,24 @@ namespace {
     	classes_before.clear();
     	classes_before.reserve(n);
 
+
 		for (const auto& part : Particles) {
 			CCParticle& cclParticle = res.emplace_back();
+
 			cclParticle.setPosition(
-				part.position.x,
+				part.position.x, // fm
 				part.position.y,
 				part.position.z,
 				part.position.t
 			);
 			cclParticle.setMomentum(
-				part.momentum.x,
-				part.momentum.y,
-				part.momentum.z,
-				std::sqrt(std::max(0.0, part.momentum.Mag2()))
+				part.momentum.x / 1000, // from MeV to GeV
+				part.momentum.y / 1000,
+				part.momentum.z / 1000,
+				std::sqrt(std::max(0.0, part.momentum.Mag2())) / 1000
 			);
+
+
 			cclParticle.setPID(part.pdg_code);
 			cclParticle.setUniqueID(uid++);
 			classes_before.push_back(part.p_class);
@@ -103,5 +107,7 @@ namespace cola {
 		data->particles = CCLToCola(particles_to_handle, classes);
 		return std::move(data);
 	}
+
+	
 }
 

@@ -75,10 +75,10 @@ namespace {
 	}
 
 	void SetMSTParams(const std::unordered_map<std::string, std::string>& params, CClusterizer& cls) {
-		cls.setRadius(findDval("radius", params));
-		cls.setMomentum(findDval("momentum", params));
+		cls.setRadius(findDval("radius", params, 4.0));
+		cls.setMomentum(findDval("momentum", params, 0.3));
 		cls.setCheckMomentum(findBval("checkMomentum", params));
-    	cls.setComputeEbind(findBval("computEbind", params));
+    	cls.setComputeEbind(findBval("computeEbind", params));
     	cls.setTrueTimeMST(findBval("trueTimeMST", params));
     	cls.setCheckPairMomentum(findBval("checkPairMomentum", params));
     	cls.setSkyrmeFormula(DefaultSkyrme());
@@ -190,7 +190,18 @@ namespace cola {
 		return conv;
 
 	}
+	/*
 
+	std::unique_ptr<VConverter> sMSTConverter::ParseData(const std::unordered_map<std::string, std::string>& meta_data) {
+
+		auto conv = std::make_unique<sMSTConverter>();
+		SetEnergyParams(meta_data);
+		SetMSTParams(meta_data, conv->cls_);
+		conv->cls_.setTrackingUseEbind(findBval("TrUseEbind", meta_data, true));
+        conv->cls_.setTrackingEbindCut(findDval("TrEbindCut", meta_data, 0.0));
+    	return conv;
+	}
+	*/
 
 }
 
