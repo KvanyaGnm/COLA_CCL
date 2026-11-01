@@ -10,7 +10,8 @@ namespace cola {
     CCLConverterFactory<MSTConverter>,
     CCLConverterFactory<SAConverter>,
     CCLConverterFactory<chainSAConverter>,
-    CCLConverterFactory<CoalConverter>
+    CCLConverterFactory<CoalConverter>,
+    CCLConverterFactory<sMSTConverter>
   >;
 
 

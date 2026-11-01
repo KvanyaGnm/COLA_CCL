@@ -49,7 +49,7 @@ namespace cola {
 	    float  prob_ = 1.0;
 	    std::vector<CoalLayer> layers;
 	};
-	/*
+	
 	class sMSTConverter final : public VConverter {
 	public:
 		static inline const std::string kName = "CCLsMST";
@@ -57,8 +57,8 @@ namespace cola {
 		static std::unique_ptr<VConverter> ParseData(const std::unordered_map<std::string, std::string>& meta_data);
 	private:
 		CClusterizer cls_;
-		std::vector<CCParticle> stable_clusters;
+		bool last_in_chain = false;
 		
-	}
-	*/
+	};
+	
 }

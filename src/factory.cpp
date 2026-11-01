@@ -1,7 +1,7 @@
 #include "filter.hh"
 #include "factory.hh"
 #include <sstream>
-
+#include "sMSTStorage.hh"
 
 namespace {
 
@@ -190,7 +190,7 @@ namespace cola {
 		return conv;
 
 	}
-	/*
+	
 
 	std::unique_ptr<VConverter> sMSTConverter::ParseData(const std::unordered_map<std::string, std::string>& meta_data) {
 
@@ -199,9 +199,15 @@ namespace cola {
 		SetMSTParams(meta_data, conv->cls_);
 		conv->cls_.setTrackingUseEbind(findBval("TrUseEbind", meta_data, true));
         conv->cls_.setTrackingEbindCut(findDval("TrEbindCut", meta_data, 0.0));
+		conv->last_in_chain = findBval("last_in_chain", meta_data, false);
+
+		Stable& instance = Stable::get_stable();
+		double& time = instance.get_time();
+		time += findDval("prop_time", meta_data, 0.0);
+
     	return conv;
 	}
-	*/
+	
 
 }
 
