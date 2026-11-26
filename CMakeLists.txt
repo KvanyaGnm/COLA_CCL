@@ -61,6 +61,7 @@ set_target_properties(
 
 # Link against COLA
 target_link_libraries("${COLA_MODULE_NAME}" PUBLIC COLA PRIVATE ccl) # Added ccl
+target_link_libraries("${COLA_MODULE_NAME}" PRIVATE /home/gucci/.local/lib/COLA_UrQMD/libCOLA_UrQMD.so)
 # Fun begins
 target_compile_options("${COLA_MODULE_NAME}" PRIVATE -Wall -Werror -Wfloat-conversion -Wextra -Wpedantic)
 

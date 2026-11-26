@@ -3,9 +3,22 @@
 #include <unordered_set>
 
 namespace {
-	std::vector<CCParticle> ColaToCCL(const cola::EventParticles& Particles, std::vector<cola::ParticleClass>& classes_before, bool track = false){
-		int uid = 0;
+
+	extern "C" void urqmd_get_uid(int* uid_out);
+	std::vector<int> get_urqmd_uids(size_t n)
+{
+    std::vector<int> uid(n);
+
+
+    urqmd_get_uid(uid.data());
+    
+    return uid;
+}
+
+	std::vector<CCParticle> ColaToCCL(const cola::EventParticles& Particles, std::unordered_map<int, cola::ParticleClass>& classes_before, bool track = false){
+		int i = 0;
 		const auto n = Particles.size();
+		auto uids = get_urqmd_uids(n);
    		std::vector<CCParticle> res;
     	res.reserve(n);
     	classes_before.clear();
@@ -30,13 +43,13 @@ namespace {
 
 			if (track) cclParticle.setCollisionTime(part.position.t);
 			cclParticle.setPID(part.pdg_code);
-			cclParticle.setUniqueID(uid++);
-			classes_before.push_back(part.p_class);
+			cclParticle.setUniqueID(uids[i]);
+			classes_before[uids[i++]] = part.p_class;
 		}
 		return res;
 	}
 
-	cola::EventParticles CCLToCola(const std::vector<CCParticle>& Particles, const std::vector<cola::ParticleClass>& classes_after){
+	cola::EventParticles CCLToCola(const std::vector<CCParticle>& Particles, const std::unordered_map<int, cola::ParticleClass>& classes_after){
 		cola::EventParticles res;
 		res.reserve(Particles.size());
 		cola::ParticleClass partClass;
@@ -47,7 +60,7 @@ namespace {
 			} else {
 				const int uid = part.getUniqueID();
 				if (uid >= 0 && static_cast<size_t>(classes_after.size()) > static_cast<size_t>(uid)) {
-					partClass = classes_after[uid];
+					partClass = classes_after.at(uid);
 				} else {
 					partClass = cola::ParticleClass::kProduced;
 				}
@@ -80,28 +93,28 @@ namespace {
 namespace cola {
 
 	std::unique_ptr<EventData> MSTConverter::operator()(std::unique_ptr<EventData>&& data) {
-		std::vector<cola::ParticleClass> classes;
+		std::unordered_map<int, cola::ParticleClass> classes;
 		std::vector<CCParticle> particles_after_mst = cls_.makeMST(ColaToCCL(data->particles, classes));
 		data->particles = CCLToCola(particles_after_mst, classes);
 		return std::move(data);
 	}
 
 	std::unique_ptr<EventData> SAConverter::operator()(std::unique_ptr<EventData>&& data) {
-		std::vector<cola::ParticleClass> classes;
+		std::unordered_map<int, cola::ParticleClass> classes;
 		std::vector<CCParticle> particles_after_mst = cls_.makeMST(ColaToCCL(data->particles, classes));
 		data->particles = CCLToCola(cls_.makeSA(particles_after_mst), classes);
 		return std::move(data);
 	}
 
 	std::unique_ptr<EventData> chainSAConverter::operator()(std::unique_ptr<EventData>&& data) {
-		std::vector<cola::ParticleClass> classes;
+		std::unordered_map<int, cola::ParticleClass> classes;
 		std::vector<CCParticle> particles_after_mst = cls_.makeMST(ColaToCCL(data->particles, classes));
 		data->particles = CCLToCola(cls_.makeSAchain(particles_after_mst), classes);
 		return std::move(data);
 	}
 
 	std::unique_ptr<EventData> CoalConverter::operator()(std::unique_ptr<EventData>&& data) {
-		std::vector<cola::ParticleClass> classes;
+		std::unordered_map<int, cola::ParticleClass> classes;
 		std::vector<CCParticle> particles_to_handle = ColaToCCL(data->particles, classes);
 		for (const auto& layer : layers) {
 			cls_.makeCoalescence(particles_to_handle, layer.type, layer.radius, layer.momentum, cls_.getCheckMomentum(), prob_);
@@ -113,9 +126,14 @@ namespace cola {
 	std::unique_ptr<EventData> sMSTConverter::operator()(std::unique_ptr<EventData>&& data) {
 		Stable& instance = Stable::get_stable();
 		std::vector<CCParticle>& stable_clusters = instance.get_clusters();
-		double& time = instance.get_time(); // needs to be thought trough
-		std::vector<cola::ParticleClass> classes;
+		
+		double& time = instance.get_time();
+		time += prop_time;
+		std::unordered_map<int, cola::ParticleClass> classes;
 		std::vector<CCParticle> cola_parts = ColaToCCL(data->particles, classes, true);
+		for (auto& part : cola_parts) {
+			part.setTime(time);
+		}
 		std::vector<CCParticle> particles_after_mst = cls_.makeMST(cola_parts);
 		cls_.updateStableVector(particles_after_mst, static_cast<float>(time), stable_clusters);
 
@@ -139,6 +157,7 @@ namespace cola {
 			if (ebind < 0) {
 				bool time_check = true;
 				for (const auto& child : particle.getChilds()) {
+					
 					if (child.getCollisionTime() > time) {
                         time_check = false;
                         break;
@@ -152,7 +171,9 @@ namespace cola {
 
 		if (last_in_chain) {
 			data->particles = CCLToCola(stable_clusters, classes);
+
 			instance.clearIfNewEvent();
+
 		}
 		return std::move(data);
 	}	

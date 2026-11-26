@@ -200,10 +200,7 @@ namespace cola {
 		conv->cls_.setTrackingUseEbind(findBval("TrUseEbind", meta_data, true));
         conv->cls_.setTrackingEbindCut(findDval("TrEbindCut", meta_data, 0.0));
 		conv->last_in_chain = findBval("last_in_chain", meta_data, false);
-
-		Stable& instance = Stable::get_stable();
-		double& time = instance.get_time();
-		time += findDval("prop_time", meta_data, 0.0);
+		conv->prop_time = findDval("prop_time", meta_data, 0.0);
 
     	return conv;
 	}

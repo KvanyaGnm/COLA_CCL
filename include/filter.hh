@@ -58,6 +58,7 @@ namespace cola {
 	private:
 		CClusterizer cls_;
 		bool last_in_chain = false;
+		double prop_time = 0.0;
 		
 	};
 	
